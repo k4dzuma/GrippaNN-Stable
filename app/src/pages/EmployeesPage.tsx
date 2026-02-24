@@ -2,6 +2,22 @@ import { useState, useEffect } from 'react';
 import { employeesApi } from '@/api/employees';
 import { filesApi } from '@/api/files';
 import type { Employee, FileItem } from '@/types';
+import { 
+  Users, 
+  Plus, 
+  Pencil, 
+  Trash2, 
+  Search, 
+  FileText, 
+  UserCircle, 
+  MapPin, 
+  Fingerprint, 
+  Upload, 
+  X, 
+  Check,
+  Eye,
+  Download
+} from 'lucide-react';
 
 export default function EmployeesPage() {
   const [items, setItems] = useState<Employee[]>([]);
@@ -10,6 +26,7 @@ export default function EmployeesPage() {
   const [editing, setEditing] = useState<Employee | null>(null);
   const [showDetail, setShowDetail] = useState<Employee | null>(null);
   const [empFiles, setEmpFiles] = useState<FileItem[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState({
     last_name: '', first_name: '', middle_name: '', birth_date: '',
     passport_series: '', passport_number: '', passport_issue_date: '',
@@ -75,7 +92,7 @@ export default function EmployeesPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Удалить сотрудника?')) {
+    if (window.confirm('Удалить карточку сотрудника?')) {
       await employeesApi.delete(id);
       load();
     }
@@ -94,167 +111,292 @@ export default function EmployeesPage() {
     loadFiles(item.id);
   };
 
+  const filteredItems = items.filter(item => 
+    item.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">Сотрудники</h1>
-        <button onClick={() => { setShowForm(true); setEditing(null); resetForm(); }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700">Добавить</button>
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+            <Users className="h-7 w-7 text-blue-600" />
+            Личный состав
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">Реестр сотрудников и персональные данные</p>
+        </div>
+        <button
+          onClick={() => { setShowForm(!showForm); setEditing(null); resetForm(); }}
+          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+            showForm ? 'bg-slate-200 text-slate-700' : 'bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700'
+          }`}
+        >
+          {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          <span>{showForm ? 'Закрыть форму' : 'Добавить сотрудника'}</span>
+        </button>
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-lg shadow p-4 mb-4">
-          <h2 className="text-lg font-semibold mb-3">{editing ? 'Редактировать' : 'Новый сотрудник'}</h2>
-          <form onSubmit={handleSubmit} className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Фамилия *</label>
-              <input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" required />
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 animate-in zoom-in-95 duration-200 overflow-hidden relative">
+          <div className="absolute top-0 left-0 w-2 h-full bg-blue-600"></div>
+          <h2 className="text-xl font-bold text-slate-800 mb-8">
+            {editing ? 'Редактирование профиля' : 'Новый сотрудник'}
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-3">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <UserCircle className="h-4 w-4" /> Основные данные
+                </h3>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700">Фамилия *</label>
+                <input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" required />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700">Имя *</label>
+                <input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" required />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700">Отчество</label>
+                <input value={form.middle_name} onChange={(e) => setForm({ ...form, middle_name: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700">Дата рождения</label>
+                <input type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Имя *</label>
-              <input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" required />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
+              <div className="md:col-span-3">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <Fingerprint className="h-4 w-4" /> Паспортные данные
+                </h3>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700">Серия</label>
+                <input value={form.passport_series} onChange={(e) => setForm({ ...form, passport_series: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700">Номер</label>
+                <input value={form.passport_number} onChange={(e) => setForm({ ...form, passport_number: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700">Дата выдачи</label>
+                <input type="date" value={form.passport_issue_date} onChange={(e) => setForm({ ...form, passport_issue_date: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+              </div>
+              <div className="md:col-span-2 space-y-2">
+                <label className="block text-xs font-bold text-slate-700">Кем выдан</label>
+                <input value={form.passport_issued_by} onChange={(e) => setForm({ ...form, passport_issued_by: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700">Код подразделения</label>
+                <input value={form.passport_code} onChange={(e) => setForm({ ...form, passport_code: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Отчество</label>
-              <input value={form.middle_name} onChange={(e) => setForm({ ...form, middle_name: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
+              <div className="md:col-span-3">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <MapPin className="h-4 w-4" /> Адрес проживания
+                </h3>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700">Регион / Область</label>
+                <input value={form.address_region} onChange={(e) => setForm({ ...form, address_region: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700">Город / НП</label>
+                <input value={form.address_city} onChange={(e) => setForm({ ...form, address_city: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700">Улица</label>
+                <input value={form.address_street} onChange={(e) => setForm({ ...form, address_street: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Дата рождения</label>
-              <input type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Серия паспорта</label>
-              <input value={form.passport_series} onChange={(e) => setForm({ ...form, passport_series: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Номер паспорта</label>
-              <input value={form.passport_number} onChange={(e) => setForm({ ...form, passport_number: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Дата выдачи</label>
-              <input type="date" value={form.passport_issue_date} onChange={(e) => setForm({ ...form, passport_issue_date: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Кем выдан</label>
-              <input value={form.passport_issued_by} onChange={(e) => setForm({ ...form, passport_issued_by: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Код подразделения</label>
-              <input value={form.passport_code} onChange={(e) => setForm({ ...form, passport_code: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Область</label>
-              <input value={form.address_region} onChange={(e) => setForm({ ...form, address_region: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Населённый пункт</label>
-              <input value={form.address_city} onChange={(e) => setForm({ ...form, address_city: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Улица</label>
-              <input value={form.address_street} onChange={(e) => setForm({ ...form, address_street: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Дом</label>
-              <input value={form.address_house} onChange={(e) => setForm({ ...form, address_house: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Корпус</label>
-              <input value={form.address_building} onChange={(e) => setForm({ ...form, address_building: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Квартира</label>
-              <input value={form.address_flat} onChange={(e) => setForm({ ...form, address_flat: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-            </div>
-            <div className="col-span-3 flex gap-2">
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700">Сохранить</button>
+
+            <div className="flex gap-4 pt-8">
+              <button type="submit" className="flex-1 bg-blue-600 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2">
+                <Check className="h-5 w-5" />
+                {editing ? 'Сохранить изменения' : 'Принять сотрудника'}
+              </button>
               <button type="button" onClick={() => { setShowForm(false); setEditing(null); }}
-                className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-300">Отмена</button>
+                className="bg-slate-100 text-slate-600 px-8 py-4 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors">
+                Отмена
+              </button>
             </div>
           </form>
         </div>
       )}
 
       {showDetail && (
-        <div className="bg-white rounded-lg shadow p-4 mb-4">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-semibold">{showDetail.full_name}</h2>
-            <button onClick={() => setShowDetail(null)} className="text-gray-400 hover:text-gray-600">Закрыть</button>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-            <p><strong>Дата рождения:</strong> {showDetail.birth_date || '—'}</p>
-            <p><strong>Паспорт:</strong> {showDetail.passport_series} {showDetail.passport_number}</p>
-            <p><strong>Адрес:</strong> {[showDetail.address_region, showDetail.address_city, showDetail.address_street, showDetail.address_house].filter(Boolean).join(', ') || '—'}</p>
-          </div>
-          <h3 className="font-semibold text-sm mb-2">Файлы</h3>
-          <div className="space-y-1 mb-3">
-            {empFiles.map((f) => (
-              <div key={f.id} className="flex items-center gap-2 text-sm">
-                <a href={f.file} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{f.title}</a>
-                <button onClick={async () => { await filesApi.delete(f.id); loadFiles(showDetail.id); }}
-                  className="text-red-500 text-xs">Удалить</button>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+            <div className="p-8 border-b border-slate-100 flex justify-between items-start bg-slate-50">
+              <div className="flex items-center gap-6">
+                <div className="h-20 w-20 rounded-3xl bg-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg shadow-blue-200">
+                  {showDetail.last_name[0]}{showDetail.first_name[0]}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900">{showDetail.full_name}</h2>
+                  <p className="text-slate-500 font-medium">Сотрудник системы</p>
+                </div>
               </div>
-            ))}
-            {empFiles.length === 0 && <p className="text-gray-400 text-sm">Нет файлов</p>}
-          </div>
-          <div className="flex gap-2 items-end">
-            <input placeholder="Название файла" value={fileTitle} onChange={(e) => setFileTitle(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm flex-1" />
-            <input type="file" onChange={(e) => setFileInput(e.target.files?.[0] || null)} className="text-sm" />
-            <button onClick={() => handleFileUpload(showDetail.id)}
-              className="bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700">Загрузить</button>
+              <button onClick={() => setShowDetail(null)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                <X className="h-6 w-6 text-slate-400" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-8 grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div className="space-y-8">
+                <section>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <UserCircle className="h-4 w-4" /> Личная информация
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between border-b border-slate-50 pb-2">
+                      <span className="text-sm text-slate-500">Дата рождения</span>
+                      <span className="text-sm font-bold text-slate-900">{showDetail.birth_date || 'Не указана'}</span>
+                    </div>
+                  </div>
+                </section>
+                <section>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <Fingerprint className="h-4 w-4" /> Паспорт
+                  </h3>
+                  <p className="text-sm font-bold text-slate-900">{showDetail.passport_series} {showDetail.passport_number}</p>
+                  <p className="text-xs text-slate-500 mt-1">{showDetail.passport_issued_by}</p>
+                </section>
+              </div>
+
+              <div className="space-y-8">
+                <section>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <FileText className="h-4 w-4" /> Документы
+                  </h3>
+                  <div className="space-y-3">
+                    {empFiles.map((f) => (
+                      <div key={f.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 group">
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-5 w-5 text-blue-500" />
+                          <span className="text-sm font-semibold text-slate-700">{f.title}</span>
+                        </div>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <a href={f.file} target="_blank" rel="noreferrer" className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md">
+                            <Download className="h-4 w-4" />
+                          </a>
+                          <button onClick={async () => { await filesApi.delete(f.id); loadFiles(showDetail.id); }}
+                            className="p-1.5 text-red-600 hover:bg-red-100 rounded-md">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {empFiles.length === 0 && <p className="text-slate-400 text-sm italic">Файлы не загружены</p>}
+                  </div>
+                  
+                  <div className="mt-6 p-4 border-2 border-dashed border-slate-200 rounded-2xl space-y-3">
+                    <input placeholder="Название документа..." value={fileTitle} onChange={(e) => setFileTitle(e.target.value)}
+                      className="w-full border-none bg-transparent text-sm focus:ring-0 p-0 mb-2 placeholder-slate-400 font-semibold" />
+                    <div className="flex items-center justify-between">
+                      <input type="file" id="file-upload" className="hidden" onChange={(e) => setFileInput(e.target.files?.[0] || null)} />
+                      <label htmlFor="file-upload" className="cursor-pointer flex items-center gap-2 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors">
+                        <Upload className="h-4 w-4" />
+                        {fileInput ? fileInput.name : 'Выбрать файл'}
+                      </label>
+                      <button onClick={() => handleFileUpload(showDetail.id)}
+                        disabled={!fileInput || !fileTitle}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 disabled:opacity-30">
+                        Загрузить
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {loading ? (
-        <p className="text-gray-500">Загрузка...</p>
-      ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">ID</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">ФИО</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Дата рождения</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Действия</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {items.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-500">{item.id}</td>
-                  <td className="px-4 py-3 font-medium text-gray-800">{item.full_name}</td>
-                  <td className="px-4 py-3 text-gray-500">{item.birth_date || '—'}</td>
-                  <td className="px-4 py-3 text-right space-x-2">
-                    <button onClick={() => handleViewDetail(item)} className="text-green-600 hover:text-green-800 text-sm">Просмотр</button>
-                    <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-800 text-sm">Изменить</button>
-                    <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-800 text-sm">Удалить</button>
-                  </td>
-                </tr>
-              ))}
-              {items.length === 0 && (
-                <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400">Нет данных</td></tr>
-              )}
-            </tbody>
-          </table>
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 bg-slate-50/30 flex flex-col sm:flex-row justify-between gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input 
+              type="text"
+              placeholder="Поиск по ФИО..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+            />
+          </div>
         </div>
-      )}
+
+        {loading ? (
+          <div className="p-12 text-center">
+            <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-slate-500">Загрузка данных...</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-50/50">
+                  <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Сотрудник</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Дата рождения</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Документы</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Управление</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredItems.map((item) => (
+                  <tr key={item.id} className="hover:bg-slate-50 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs border border-slate-200">
+                          {item.last_name[0]}{item.first_name[0]}
+                        </div>
+                        <div className="font-bold text-slate-900">{item.full_name}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500">
+                      {item.birth_date || '—'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-1 rounded-md">ID: {item.id}</span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-1">
+                        <button onClick={() => handleViewDetail(item)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Карточка">
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => handleEdit(item)} className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Изменить">
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => handleDelete(item.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Удалить">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
