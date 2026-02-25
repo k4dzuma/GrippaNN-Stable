@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Django
+*.log
+db.sqlite3
+media/
+staticfiles/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node
+node_modules/
+app/node_modules/
+app/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+
+# Byte-compiled
+*.pyc
+
+# Distribution
+*.tar.gz
+*.whl
